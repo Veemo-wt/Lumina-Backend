@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-DATA_ROOT = Path(os.getenv("LUMINA_DATA", "/data/lumina")).resolve()
+DATA_ROOT = Path(os.getenv("LUMINA_DATA_ROOT", "./data/lumina")).resolve()
 DATA_ROOT.mkdir(parents=True, exist_ok=True)
 
 MAX_SESSIONS_DEFAULT = int(os.getenv("LUMINA_MAX_SESSIONS", "50"))
@@ -18,7 +18,9 @@ def _user_key_from_email(email: str) -> str:
 def get_user_email(req: Request) -> str:
     email = req.headers.get("Cf-Access-Authenticated-User-Email")
     if not email:
-        raise HTTPException(status_code=401, detail="Missing Cloudflare Access identity")
+        # DEV MODE: Use mock email for local development
+        email = os.getenv("LUMINA_DEV_EMAIL", "dev@localhost.local")
+        print(f"⚠️  DEV MODE: Using mock email: {email}")
     return email
 
 def user_dir(email: str) -> Path:
