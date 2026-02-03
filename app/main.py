@@ -1,8 +1,10 @@
-import os, re, json, time, hashlib
+import os, re, json, time
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.auth import get_user_id, get_user_email
 
 DATA_ROOT = Path(os.getenv("LUMINA_DATA_ROOT", "./data/lumina")).resolve()
 DATA_ROOT.mkdir(parents=True, exist_ok=True)
@@ -11,32 +13,6 @@ MAX_SESSIONS_DEFAULT = int(os.getenv("LUMINA_MAX_SESSIONS", "50"))
 
 def _safe(s: str) -> str:
     return re.sub(r"[^a-zA-Z0-9._-]+", "_", (s or "").strip())
-
-def get_user_id(request: Request) -> str:
-    """Get hashed user ID from authenticated email. Raises 401 if not authenticated."""
-    email = request.headers.get("Cf-Access-Authenticated-User-Email")
-    if not email:
-        # DEV MODE: Use mock email for local development
-        dev_email = os.getenv("LUMINA_DEV_EMAIL")
-        if dev_email:
-            print(f"⚠️  DEV MODE: Using mock email: {dev_email}")
-            return hashlib.sha256(dev_email.encode()).hexdigest()
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    return hashlib.sha256(email.encode()).hexdigest()
-
-def get_user_email(request: Request) -> str:
-    """Get user email for display purposes only. Raises 401 if not authenticated."""
-    email = request.headers.get("Cf-Access-Authenticated-User-Email")
-    if not email:
-        # DEV MODE: Use mock email for local development
-        dev_email = os.getenv("LUMINA_DEV_EMAIL")
-        if dev_email:
-            print(f"⚠️  DEV MODE: Using mock email: {dev_email}")
-            return dev_email
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    return email
 
 def user_dir(user_id: str) -> Path:
     """Create user directory based on hashed user ID."""
