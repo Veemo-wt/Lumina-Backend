@@ -89,7 +89,7 @@ app.add_middleware(
         "http://localhost:5176",
         "http://localhost:5177",
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
