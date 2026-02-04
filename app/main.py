@@ -9,7 +9,7 @@ from app.auth import get_user_id, get_user_email
 DATA_ROOT = Path(os.getenv("LUMINA_DATA_ROOT", "./data/lumina")).resolve()
 DATA_ROOT.mkdir(parents=True, exist_ok=True)
 
-MAX_SESSIONS_DEFAULT = int(os.getenv("LUMINA_MAX_SESSIONS", "50"))
+MAX_SESSIONS_DEFAULT = int(os.getenv("LUMINA_MAX_SESSIONS", "500"))
 
 def _safe(s: str) -> str:
     return re.sub(r"[^a-zA-Z0-9._-]+", "_", (s or "").strip())
