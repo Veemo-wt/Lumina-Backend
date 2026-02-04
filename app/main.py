@@ -81,6 +81,7 @@ app.add_middleware(
         "https://editor.lumina-suite.tech",
         "https://translate.lumina-suite.tech",
         "https://describer.lumina-suite.tech",
+        "https://analyze.lumina-suite.tech",
         "https://analyzer.lumina-suite.tech",
         "https://lumina-suite.tech",
         "http://localhost:5173",
