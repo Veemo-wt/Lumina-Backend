@@ -93,6 +93,8 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],  # Expose all response headers to JavaScript
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 @app.get("/health")
