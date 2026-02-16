@@ -73,23 +73,37 @@ def enforce_limit(user_id: str, app: str, max_sessions: int):
 
 app = FastAPI(title="Lumina Backend API")
 
-# CORS: dodaj tu swoje fronty (wszystkie subdomeny które będą wołać API)
+# Custom CORS origin validator to allow local network access
+def cors_origin_validator(origin: str) -> bool:
+    """
+    Allow:
+    - Production domains (*.lumina-suite.tech)
+    - Localhost on any port
+    - Local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x) on ports 5173-5177
+    """
+    if not origin:
+        return True
+
+    # Production domains
+    if origin.endswith('.lumina-suite.tech') or origin == 'https://lumina-suite.tech':
+        return True
+
+    # Localhost
+    if origin.startswith('http://localhost:') or origin.startswith('http://127.0.0.1:'):
+        return True
+
+    # Local network IPs (common private IP ranges)
+    # Match http://192.168.x.x:port, http://10.x.x.x:port, http://172.16-31.x.x:port
+    local_ip_pattern = r'^http://(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}):(5173|5174|5175|5176|5177|3001)$'
+    if re.match(local_ip_pattern, origin):
+        return True
+
+    return False
+
+# CORS: Allow production domains + localhost + local network IPs
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://scanner.lumina-suite.tech",
-        "https://editor.lumina-suite.tech",
-        "https://translate.lumina-suite.tech",
-        "https://describer.lumina-suite.tech",
-        "https://analyze.lumina-suite.tech",
-        "https://analyzer.lumina-suite.tech",
-        "https://lumina-suite.tech",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "http://localhost:5177",
-    ],
+    allow_origin_regex=r'^(https://[a-z-]+\.lumina-suite\.tech|https://lumina-suite\.tech|http://localhost:\d+|http://127\.0\.0\.1:\d+|http://(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}):(5173|5174|5175|5176|5177|3001))$',
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
