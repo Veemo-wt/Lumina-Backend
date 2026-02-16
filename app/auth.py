@@ -1,5 +1,7 @@
 import os
 import hashlib
+import base64
+from urllib.parse import unquote
 from fastapi import Request, HTTPException
 
 def _hash_username(username: str) -> str:
@@ -9,15 +11,22 @@ def _hash_username(username: str) -> str:
 def get_user_id(request: Request) -> str:
     """
     Get hashed user ID. Priority:
-    1. X-Username header (manual username from frontend)
+    1. X-Username header (manual username from frontend) - base64 encoded
     2. API KEY (for programmatic access)
     3. Cloudflare Access email (legacy)
     4. DEV email (local development)
     """
-    # 1) X-Username (manual username from frontend)
-    username = request.headers.get("X-Username")
-    if username:
-        return _hash_username(username)
+    # 1) X-Username (manual username from frontend) - base64 encoded to support Polish characters
+    username_encoded = request.headers.get("X-Username")
+    if username_encoded:
+        try:
+            # Decode from base64 -> URL decode -> original username
+            username = unquote(base64.b64decode(username_encoded).decode('utf-8'))
+            return _hash_username(username)
+        except Exception as e:
+            print(f"⚠️ Failed to decode X-Username: {e}")
+            # Fallback to using encoded value as-is (for backwards compatibility)
+            return _hash_username(username_encoded)
 
     # 2) API KEY (publiczne API z kluczem)
     expected = os.getenv("LUMINA_API_KEY")
